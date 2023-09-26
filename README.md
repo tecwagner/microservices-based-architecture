@@ -19,4 +19,5 @@
 
 # Arquitetura Principal do Projeto
 
-    ![Alt text](image.png)
+![image](https://github.com/tecwagner/microservices-based-architecture/assets/5458401/97e2052c-d4df-48a8-90f6-616f08da6373)
+
