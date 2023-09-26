@@ -1,0 +1,53 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+' Adicionando Tag para Relacionamento assincrono
+AddRelTag("async", $lineStyle = DashedLine())
+
+title "Digital Wallet Payment Crow"
+
+Person(client, "Client", "Digital Wallet User")
+
+System_Ext(payment_gateway, "Payment Gateway", "Payment Processor")
+
+System_Boundary(digital_wallet, "Digital Wallet") {
+    ' Application in Container
+    Container(spa, "SPA", "React", "Digital Wallet Web App")
+    Container(wallet_core, "Wallet Core", "TypeScript", "Digital Wallet Core is responsible for the transactions")
+    Container(balance_service, "Balance Microservice", "TypeScript", "Returns customer balance")
+    Container(statement_service, "Statement Microservice", "TypeScript", "Returns customer statements")
+    Container(payment_acl, "Payment ACL", "TypeScript", "Anticorruption Layer for Payment Gateway")
+
+    ' Relations with Database
+    ContainerDb(wallet_core_db, "Wallet DB", "MySQL")
+    Rel(wallet_core, wallet_core_db, "Uses", "MySQL Driver")
+
+    ContainerDb(balance_service_db, "Balance DB", "MySQL")
+    Rel(balance_service, balance_service_db, "Uses", "MySQL Driver")
+
+    ContainerDb(statement_service_db, "Statement DB", "MySQL")
+    Rel(statement_service, statement_service_db, "Uses", "MySQL Driver")
+
+    ContainerDb(payment_acl_db, "Payment ACL DB", "MySQL")
+    Rel(payment_acl, payment_acl_db, "Uses", "MySQL Driver")
+
+    ' O client está relacionando direto com a spa
+    Rel(client, spa, "Uses", "HTTPS")
+
+    ' A SPA faz relacionamento direto com os microservices 
+    Rel(spa, wallet_core, "Uses", "JSON/HTTPS")
+    Rel(spa, balance_service, "Uses", "JSON/HTTPS")
+    Rel(spa, statement_service, "Uses", "JSON/HTTPS")
+
+    ' O Microservice Wallet Core, comunica com a payment acl, que payment acl faz comunicação com payment gateway
+    Rel(wallet_core, payment_acl, "Uses", "JSON/HTTPS")
+    Rel(payment_acl, payment_gateway, "Uses", "JSON/HTTPS")
+
+    ' Criando um relacionamento de chamada assicrona
+    Rel(wallet_core, balance_service, "Uses", "Topic Kafka", $tags= "async" )
+    Rel(wallet_core, statement_service, "Uses", "Topic Kafka", $tags= "async" )
+
+
+
+}
+
+@enduml
